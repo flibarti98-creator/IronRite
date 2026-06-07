@@ -1,1 +1,190 @@
- 
+/* ============================================
+   QUIZ SCREEN (MATCHING LOADING STYLE)
+   ============================================ */
+
+.quiz {
+  width: 100%;
+  max-width: 520px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #ECEFF1;
+}
+
+/* ---- Title ---- */
+.quiz h2 {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* ---- Description ---- */
+.quiz p {
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(154, 166, 178, 0.75);
+  margin: 0 0 16px 0;
+  line-height: 1.5;
+}
+
+/* ============================================
+   INPUTS
+   ============================================ */
+
+input[type="text"] {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(19, 28, 46, 0.6);
+  color: white;
+  outline: none;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+input[type="text"]:focus {
+  border-color: rgba(91, 127, 191, 0.7);
+  box-shadow: 0 0 0 3px rgba(91, 127, 191, 0.15);
+}
+
+/* ============================================
+   SLIDER
+   ============================================ */
+
+input[type="range"] {
+  width: 100%;
+  margin-top: 10px;
+  accent-color: #5B7FBF;
+}
+
+#value {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(154, 166, 178, 0.8);
+}
+
+/* ============================================
+   CARDS (GOAL / OPTIONS)
+   ============================================ */
+
+.card {
+  width: 100%;
+  padding: 16px 18px;
+  margin: 10px 0;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(19, 28, 46, 0.55);
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(91, 127, 191, 0.4);
+  background: rgba(19, 28, 46, 0.75);
+}
+
+.card.active {
+  border-color: rgba(91, 127, 191, 0.9);
+  background: rgba(91, 127, 191, 0.12);
+}
+
+/* card text */
+.card .label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.card .sub {
+  font-size: 12px;
+  color: rgba(154, 166, 178, 0.7);
+  margin-top: 4px;
+}
+
+/* ============================================
+   ACTIONS (buttons)
+   ============================================ */
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 12px;
+}
+
+button {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(19, 28, 46, 0.6);
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  border-color: rgba(91, 127, 191, 0.6);
+  transform: translateY(-1px);
+}
+
+button#next {
+  background: linear-gradient(90deg, #5B7FBF, #A8BFEA);
+  color: #0D1421;
+  border: none;
+}
+
+button#next:hover {
+  opacity: 0.95;
+}
+
+/* ============================================
+   LIFTS
+   ============================================ */
+
+.lift {
+  margin: 12px 0;
+}
+
+.lift label {
+  display: block;
+  font-size: 12px;
+  color: rgba(154, 166, 178, 0.7);
+  margin-bottom: 6px;
+}
+
+.lift input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(19, 28, 46, 0.5);
+  color: white;
+}
+
+/* ============================================
+   MOBILE OPTIMIZATION
+   ============================================ */
+
+@media (max-width: 480px) {
+  .quiz {
+    padding: 20px;
+  }
+
+  .quiz h2 {
+    font-size: 20px;
+  }
+
+  button {
+    font-size: 12px;
+  }
+}

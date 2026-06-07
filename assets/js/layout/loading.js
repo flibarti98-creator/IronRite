@@ -69,7 +69,7 @@ export function showLoading(next) {
     </div>
   `;
 
-  const DURATION = 2800;
+  const DURATION = 2;
   const bar = document.getElementById("loaderBar");
   const start = performance.now();
 
