@@ -56,7 +56,7 @@ export function showLoading(next) {
 
       <div class="logo-wrapper">
         ${LOGO_SVG}
-        <p class="loading-tagline">Low cortisol. High testosterone.</p>
+        <p class="loading-tagline">low cortisol • high testosterone</p>
       </div>
 
       <div class="loading-bottom">
