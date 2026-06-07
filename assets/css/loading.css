@@ -1,5 +1,5 @@
 /* ============================================
-   LOADING SCREEN — IMPROVED VERSION
+   LOADING SCREEN
    ============================================ */
 
 .loading-screen {
@@ -9,63 +9,63 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
-  padding: 80px 40px;
-  background: linear-gradient(180deg, #0F172A 0%, #1E2631 100%);
+  background: linear-gradient(160deg, #0D1421 0%, #131C2E 60%, #0F1A28 100%);
   overflow: hidden;
-
   opacity: 1;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.6s ease;
   z-index: 9999;
-
   user-select: none;
+  -webkit-user-select: none;
 }
 
-.loading-screen--fade-out {
+.loading-screen--out {
   opacity: 0;
   pointer-events: none;
 }
 
-/* ---- Subtle glow ---- */
-.loading-screen::before {
-  content: "";
+/* ---- Glow ---- */
+.loading-glow {
   position: absolute;
-  width: clamp(280px, 45vw, 520px);
-  height: clamp(280px, 45vw, 520px);
-  background: radial-gradient(
-    circle,
-    rgba(138, 154, 200, 0.12),
-    transparent 70%
-  );
-  filter: blur(40px);
-  top: 40%;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(100, 130, 200, 0.10) 0%, transparent 70%);
+  filter: blur(50px);
+  top: 42%;
   left: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
-/* ---- Logo ---- */
+/* ---- Logo wrapper ---- */
 .logo-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
+  gap: 28px;
 }
 
-.logo-img {
-  width: clamp(170px, 18vw, 280px);
+/* ---- SVG Logo ---- */
+.logo-svg {
+  width: 200px;
   height: auto;
-  animation: ironrite-pulse 2.8s ease-in-out infinite;
-  z-index: 2;
+  animation: logo-pulse 3s ease-in-out infinite;
 }
 
-@keyframes ironrite-pulse {
+.logo-svg .logo-icon {
+  fill: #FFFFFF;
+}
+
+.logo-svg .logo-text {
+  fill: rgba(255, 255, 255, 0.75);
+}
+
+@keyframes logo-pulse {
   0%, 100% {
     transform: scale(1);
-    opacity: 0.95;
+    opacity: 0.9;
   }
   50% {
-    transform: scale(1.04);
+    transform: scale(1.03);
     opacity: 1;
   }
 }
@@ -74,9 +74,9 @@
 .loading-tagline {
   font-family: 'Barlow', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 300;
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: #9AA6B2;
+  font-size: 10px;
+  letter-spacing: 3.5px;
+  color: rgba(154, 166, 178, 0.7);
   text-align: center;
   text-transform: uppercase;
   margin: 0;
@@ -85,20 +85,22 @@
 /* ---- Bottom ---- */
 .loading-bottom {
   position: absolute;
-  bottom: 60px;
+  bottom: 52px;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  padding: 0 40px;
+  box-sizing: border-box;
 }
 
-/* ---- Loader ---- */
-.loader-container {
-  width: 80%;
-  max-width: 320px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.08);
+/* ---- Loader track ---- */
+.loader-track {
+  width: 100%;
+  max-width: 260px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.07);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -106,46 +108,56 @@
 .loader-bar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #8A9AC8, #ECEFF1);
+  background: linear-gradient(90deg, #5B7FBF, #A8BFEA, #ECEFF1);
   border-radius: 999px;
-  transition: width 0.1s linear;
+  transition: width 0.12s linear;
 }
 
 /* ---- Label ---- */
 .loader-label {
   font-family: 'Barlow', 'Helvetica Neue', Arial, sans-serif;
   font-weight: 300;
-  font-size: 10px;
-  letter-spacing: 3px;
-  color: #9AA6B2;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(154, 166, 178, 0.5);
   text-transform: uppercase;
-  animation: blink 2.5s ease-in-out infinite;
+  margin: 0;
+  animation: label-blink 2.5s ease-in-out infinite;
 }
 
-@keyframes blink {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
+@keyframes label-blink {
+  0%, 100% { opacity: 0.3; }
+  50%       { opacity: 1;   }
 }
 
-/* ---- Mobile ---- */
-@media (max-width: 480px) {
-  .loading-bottom {
-    bottom: 40px;
+/* ---- Mobile (domyślnie — mobile first) ---- */
+@media (max-width: 390px) {
+  .logo-svg {
+    width: 160px;
   }
 
   .loading-tagline {
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 2.5px;
+  }
+
+  .loading-bottom {
+    bottom: 40px;
   }
 }
 
-/* ---- Laptop ---- */
-@media (min-width: 1024px) {
-  .logo-img {
-    width: 300px;
+/* ---- Tablet / Desktop ---- */
+@media (min-width: 768px) {
+  .logo-svg {
+    width: 260px;
   }
 
-  .loader-container {
-    max-width: 380px;
+  .loader-track {
+    max-width: 320px;
+  }
+
+  .loading-glow {
+    width: 480px;
+    height: 480px;
   }
 }

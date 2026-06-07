@@ -1,5 +1,8 @@
-const LOGO_SVG = `
-<svg class="logo-svg" viewBox="0 0 466 337" xmlns="http://www.w3.org/2000/svg" aria-label="IronRite">
+<svg xmlns="http://www.w3.org/2000/svg"
+ viewBox="0 0 466 337"
+ preserveAspectRatio="xMidYMid meet">
+
+  <!-- IKONA IR -->
   <g class="logo-icon" transform="translate(0,337) scale(0.1,-0.1)">
     <path d="M2782 2910 c-118 -32 -223 -92 -310 -180 -85 -84 -131 -152 -444
 -660 -110 -179 -285 -462 -390 -629 -104 -167 -187 -305 -185 -307 2 -2 367
@@ -17,6 +20,8 @@ const LOGO_SVG = `
 44 -61 30 -50 39 -58 49 -47 17 17 165 276 165 287 0 11 -246 410 -264 429
 -11 11 -29 -13 -103 -135z"/>
   </g>
+
+  <!-- TEKST IRONRITE -->
   <g class="logo-text" transform="translate(0,337) scale(0.1,-0.1)">
     <path d="M1484 831 c-118 -31 -184 -122 -184 -255 0 -167 84 -263 240 -274
 123 -8 213 38 256 133 67 146 24 310 -97 372 -50 26 -161 38 -215 24z m162
@@ -43,53 +48,5 @@ m283 199 c49 -13 77 -44 77 -87 0 -80 -40 -102 -185 -102 l-105 0 0 100 0 100
 156 0 155 0 0 25 0 24 -152 3 -153 3 -3 83 -3 82 166 0 165 0 0 30 0 30 -200
 0 -200 0 0 -260z"/>
   </g>
+
 </svg>
-`;
-
-export function showLoading(next) {
-  const app = document.getElementById("app");
-
-  app.innerHTML = `
-    <div class="loading-screen">
-
-      <div class="loading-glow"></div>
-
-      <div class="logo-wrapper">
-        ${LOGO_SVG}
-        <p class="loading-tagline">Low cortisol. High testosterone.</p>
-      </div>
-
-      <div class="loading-bottom">
-        <div class="loader-track">
-          <div class="loader-bar" id="loaderBar"></div>
-        </div>
-        <p class="loader-label">Loading</p>
-      </div>
-
-    </div>
-  `;
-
-  const DURATION = 2800;
-  const bar = document.getElementById("loaderBar");
-  const start = performance.now();
-
-  function animateBar(now) {
-    const elapsed = now - start;
-    const progress = Math.min(elapsed / DURATION, 1);
-    const eased = 1 - Math.pow(1 - progress, 3);
-    bar.style.width = `${eased * 100}%`;
-    if (progress < 1) requestAnimationFrame(animateBar);
-  }
-
-  requestAnimationFrame(animateBar);
-
-  setTimeout(() => {
-    const screen = app.querySelector(".loading-screen");
-    if (screen) {
-      screen.classList.add("loading-screen--out");
-      setTimeout(() => next(), 600);
-    } else {
-      next();
-    }
-  }, DURATION + 200);
-}
