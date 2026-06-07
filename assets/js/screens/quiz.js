@@ -8,35 +8,51 @@ export function showQuiz(onFinish) {
   let currentIndex = 0;
   const answers = {};
 
-  // 🔥 CARDS CLICK (GLOBAL)
+  // Global card click handler
   app.addEventListener("click", (e) => {
     const card = e.target.closest(".card");
     if (!card) return;
 
     selectedCard = card.dataset.value;
 
-    app.querySelectorAll(".card").forEach(c =>
-      c.classList.remove("active")
-    );
-
+    app.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
     card.classList.add("active");
+
+    clearError();
   });
 
   function render() {
     selectedCard = null;
 
     const q = QUESTIONS[currentIndex];
+    const stepNum = currentIndex + 1;
+    const total = QUESTIONS.length;
+    const progress = (stepNum / total) * 100;
 
     app.innerHTML = `
-      <div class="quiz">
-        <h2>${q.title}</h2>
-        <p>${q.desc || ""}</p>
+      <div class="quiz-screen">
+        <div class="quiz">
 
-        <div id="content"></div>
+          <div class="quiz-progress-wrap">
+            <div class="quiz-progress-track">
+              <div class="quiz-progress-bar" id="progressBar" style="width: ${progress}%"></div>
+            </div>
+            <span class="quiz-step-label">${stepNum} / ${total}</span>
+          </div>
 
-        <div class="actions">
-          ${currentIndex > 0 ? `<button id="back">Wstecz</button>` : ""}
-          <button id="next">Dalej</button>
+          <h2>${q.title}</h2>
+          ${q.desc ? `<p class="desc">${q.desc}</p>` : ""}
+
+          <div id="content"></div>
+          <p class="quiz-error" id="quizError"></p>
+
+          <div class="actions">
+            ${currentIndex > 0 ? `<button class="btn" id="back">Wstecz</button>` : ""}
+            <button class="btn btn-primary" id="next">
+              ${currentIndex === QUESTIONS.length - 1 ? "Gotowe" : "Dalej"}
+            </button>
+          </div>
+
         </div>
       </div>
     `;
@@ -50,49 +66,91 @@ export function showQuiz(onFinish) {
 
     if (q.type === "text") {
       el.innerHTML = `
-        <input id="input"
+        <input
+          id="input"
+          type="text"
           placeholder="${q.input.placeholder}"
           maxlength="${q.input.maxLength}"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
         />
       `;
+      // autofocus po krótkim delay (iOS compatibility)
+      setTimeout(() => {
+        const inp = document.getElementById("input");
+        if (inp) inp.focus();
+      }, 100);
     }
 
     if (q.type === "slider") {
+      const { min, max, step, default: def, unit } = q.slider;
       el.innerHTML = `
-        <input id="input" type="range"
-          min="${q.slider.min}"
-          max="${q.slider.max}"
-          step="${q.slider.step}"
-          value="${q.slider.default}"
-        />
-
-        <div id="value">${q.slider.default}</div>
+        <div class="slider-wrap">
+          <div class="slider-top">
+            <span class="slider-name">${q.title}</span>
+            <span class="slider-val" id="sliderVal">${def} ${unit || ""}</span>
+          </div>
+          <input
+            id="input"
+            type="range"
+            min="${min}"
+            max="${max}"
+            step="${step}"
+            value="${def}"
+          />
+          <div class="slider-range">
+            <span>${min}</span>
+            <span>${max}</span>
+          </div>
+        </div>
       `;
 
       const input = document.getElementById("input");
-      const value = document.getElementById("value");
+      const valEl = document.getElementById("sliderVal");
 
       input.oninput = () => {
-        value.textContent = input.value;
+        valEl.textContent = `${input.value} ${unit || ""}`;
       };
     }
 
     if (q.type === "cards") {
-      el.innerHTML = q.options.map(opt => `
-        <button class="card" data-value="${opt.value}">
-          <div class="label">${opt.label}</div>
-          ${opt.sub ? `<div class="sub">${opt.sub}</div>` : ""}
-        </button>
-      `).join("");
+      el.innerHTML = `
+        <div class="cards-wrap">
+          ${q.options.map(opt => `
+            <button class="card" data-value="${opt.value}">
+              <div class="card-dot"></div>
+              <div class="card-body">
+                <div class="label">${opt.label}</div>
+                ${opt.sub ? `<div class="sub">${opt.sub}</div>` : ""}
+              </div>
+            </button>
+          `).join("")}
+        </div>
+      `;
     }
 
     if (q.type === "lifts") {
-      el.innerHTML = q.fields.map(f => `
-        <div class="lift">
-          <label>${f.label}</label>
-          <input data-id="${f.id}" placeholder="${f.placeholder}" />
+      el.innerHTML = `
+        <div class="lifts-wrap">
+          ${q.fields.map(f => `
+            <div class="lift">
+              <label>${f.label}</label>
+              <div class="lift-row">
+                <input
+                  type="number"
+                  data-id="${f.id}"
+                  placeholder="${f.placeholder}"
+                  min="0"
+                  max="999"
+                  inputmode="decimal"
+                />
+                <span class="lift-unit">${f.unit || "kg"}</span>
+              </div>
+            </div>
+          `).join("")}
         </div>
-      `).join("");
+      `;
     }
   }
 
@@ -101,11 +159,10 @@ export function showQuiz(onFinish) {
 
     nextBtn.onclick = () => {
       const value = readValue(q);
-
       const valid = q.validate ? q.validate(value) : true;
 
       if (valid !== true) {
-        alert(valid);
+        showError(valid);
         return;
       }
 
@@ -125,27 +182,46 @@ export function showQuiz(onFinish) {
         render();
       };
     }
+
+    // Enter key na text input
+    const input = document.getElementById("input");
+    if (input && q.type === "text") {
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") nextBtn.click();
+      });
+    }
   }
 
   function readValue(q) {
     if (q.type === "text" || q.type === "slider") {
       return document.getElementById("input").value;
     }
-
     if (q.type === "cards") {
       return selectedCard;
     }
-
     if (q.type === "lifts") {
       const data = {};
-
       q.fields.forEach(f => {
         data[f.id] = app.querySelector(`[data-id="${f.id}"]`).value;
       });
-
       return data;
     }
   }
 
-  render(); // 🔥 MUSI BYĆ NA KOŃCU
+  function showError(msg) {
+    const el = document.getElementById("quizError");
+    if (el) {
+      el.textContent = msg;
+      el.style.opacity = "1";
+    }
+  }
+
+  function clearError() {
+    const el = document.getElementById("quizError");
+    if (el) {
+      el.textContent = "";
+    }
+  }
+
+  render();
 }
