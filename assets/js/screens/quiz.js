@@ -2,15 +2,17 @@ import { QUESTIONS } from "../data/questions.js";
 import { loadCSS } from "../utils.js";
 
 let selectedCard = null;
+let sliderValue = null;
+let canClick = true;
 
 export function showQuiz(onFinish) {
-  loadCSS("assets/css/quiz.css");  
+  loadCSS("assets/css/quiz.css");
+
   const app = document.getElementById("app");
 
   let currentIndex = 0;
   const answers = {};
 
-  // Global card click handler
   app.addEventListener("click", (e) => {
     const card = e.target.closest(".card");
     if (!card) return;
@@ -21,15 +23,22 @@ export function showQuiz(onFinish) {
     card.classList.add("active");
 
     clearError();
+
+    const q = QUESTIONS[currentIndex];
+    if (q?.autoNext) {
+      setTimeout(() => {
+        document.getElementById("next")?.click();
+      }, 180);
+    }
   });
 
   function render() {
     selectedCard = null;
+    sliderValue = null;
 
     const q = QUESTIONS[currentIndex];
-    const stepNum = currentIndex + 1;
-    const total = QUESTIONS.length;
-    const progress = (stepNum / total) * 100;
+
+    const progress = ((currentIndex + 1) / QUESTIONS.length) * 100;
 
     app.innerHTML = `
       <div class="quiz-screen">
@@ -37,22 +46,21 @@ export function showQuiz(onFinish) {
 
           <div class="quiz-progress-wrap">
             <div class="quiz-progress-track">
-              <div class="quiz-progress-bar" id="progressBar" style="width: ${progress}%"></div>
+              <div class="quiz-progress-bar" style="width:${progress}%"></div>
             </div>
-            <span class="quiz-step-label">${stepNum} / ${total}</span>
+            <span class="quiz-step-label">
+              ${currentIndex + 1} / ${QUESTIONS.length}
+            </span>
           </div>
 
           <h2>${q.title}</h2>
-          ${q.desc ? `<p class="desc">${q.desc}</p>` : ""}
 
           <div id="content"></div>
           <p class="quiz-error" id="quizError"></p>
 
           <div class="actions">
             ${currentIndex > 0 ? `<button class="btn" id="back">Wstecz</button>` : ""}
-            <button class="btn btn-primary" id="next">
-              ${currentIndex === QUESTIONS.length - 1 ? "Gotowe" : "Dalej"}
-            </button>
+            <button class="btn btn-primary" id="next">Dalej</button>
           </div>
 
         </div>
@@ -66,89 +74,71 @@ export function showQuiz(onFinish) {
   function renderQuestion(q) {
     const el = document.getElementById("content");
 
-    if (q.type === "text") {
+    /* ================= TEXT / NUMBER ================= */
+    if (q.type === "text" || q.type === "number") {
       el.innerHTML = `
-        <input
-          id="input"
-          type="text"
-          placeholder="${q.input.placeholder}"
-          maxlength="${q.input.maxLength}"
-          autocomplete="off"
-          autocorrect="off"
-          spellcheck="false"
+        <input id="input"
+          type="${q.type === "number" ? "number" : "text"}"
+          placeholder="${q.input?.placeholder || ""}"
         />
       `;
-      // autofocus po krótkim delay (iOS compatibility)
-      setTimeout(() => {
-        const inp = document.getElementById("input");
-        if (inp) inp.focus();
-      }, 100);
+
+      setTimeout(() => document.getElementById("input")?.focus(), 70);
     }
 
+    /* ================= SLIDER ================= */
     if (q.type === "slider") {
-      const { min, max, step, default: def, unit } = q.slider;
+      const s = q.slider;
+
+      sliderValue = s.default;
+
       el.innerHTML = `
         <div class="slider-wrap">
           <div class="slider-top">
-            <span class="slider-name">${q.title}</span>
-            <span class="slider-val" id="sliderVal">${def} ${unit || ""}</span>
+            <span>${q.title}</span>
+            <span id="sliderVal">${s.default} ${s.unit}</span>
           </div>
-          <input
-            id="input"
+
+          <input id="input"
             type="range"
-            min="${min}"
-            max="${max}"
-            step="${step}"
-            value="${def}"
+            min="${s.min}"
+            max="${s.max}"
+            step="${s.step}"
+            value="${s.default}"
           />
-          <div class="slider-range">
-            <span>${min}</span>
-            <span>${max}</span>
-          </div>
         </div>
       `;
 
       const input = document.getElementById("input");
-      const valEl = document.getElementById("sliderVal");
+      const val = document.getElementById("sliderVal");
 
-      input.oninput = () => {
-        valEl.textContent = `${input.value} ${unit || ""}`;
-      };
+      input.addEventListener("input", () => {
+        sliderValue = Number(input.value);
+        val.textContent = `${input.value} ${s.unit}`;
+      });
     }
 
+    /* ================= CARDS ================= */
     if (q.type === "cards") {
       el.innerHTML = `
         <div class="cards-wrap">
-          ${q.options.map(opt => `
-            <button class="card" data-value="${opt.value}">
-              <div class="card-dot"></div>
-              <div class="card-body">
-                <div class="label">${opt.label}</div>
-                ${opt.sub ? `<div class="sub">${opt.sub}</div>` : ""}
-              </div>
+          ${q.options.map(o => `
+            <button class="card" data-value="${o.value}">
+              ${o.label}
             </button>
           `).join("")}
         </div>
       `;
     }
 
+    /* ================= LIFTS ================= */
     if (q.type === "lifts") {
       el.innerHTML = `
         <div class="lifts-wrap">
           ${q.fields.map(f => `
             <div class="lift">
               <label>${f.label}</label>
-              <div class="lift-row">
-                <input
-                  type="number"
-                  data-id="${f.id}"
-                  placeholder="${f.placeholder}"
-                  min="0"
-                  max="999"
-                  inputmode="decimal"
-                />
-                <span class="lift-unit">${f.unit || "kg"}</span>
-              </div>
+              <input type="number" data-id="${f.id}" placeholder="${f.unit}" />
             </div>
           `).join("")}
         </div>
@@ -160,51 +150,66 @@ export function showQuiz(onFinish) {
     const nextBtn = document.getElementById("next");
 
     nextBtn.onclick = () => {
+      if (!canClick) return;
+      canClick = false;
+
       const value = readValue(q);
+
+      if (q.required && (value === null || value === "" || value === undefined)) {
+        showError("To pole jest wymagane");
+        canClick = true;
+        return;
+      }
+
       const valid = q.validate ? q.validate(value) : true;
 
-      if (valid !== true) {
-        showError(valid);
+      if (!valid) {
+        showError("Podaj poprawną wartość");
+        canClick = true;
         return;
       }
 
       answers[q.id] = value;
 
-      if (currentIndex === QUESTIONS.length - 1) {
-        onFinish(answers);
-      } else {
-        currentIndex++;
-        render();
-      }
+      setTimeout(() => {
+        canClick = true;
+
+        if (currentIndex === QUESTIONS.length - 1) {
+          onFinish(answers);
+        } else {
+          currentIndex++;
+          render();
+        }
+      }, 250);
     };
 
-    if (currentIndex > 0) {
-      document.getElementById("back").onclick = () => {
-        currentIndex--;
-        render();
-      };
-    }
-
-    // Enter key na text input
-    const input = document.getElementById("input");
-    if (input && q.type === "text") {
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") nextBtn.click();
-      });
-    }
+    document.getElementById("back")?.addEventListener("click", () => {
+      currentIndex--;
+      render();
+    });
   }
 
   function readValue(q) {
-    if (q.type === "text" || q.type === "slider") {
-      return document.getElementById("input").value;
+    if (q.type === "text") {
+      return document.getElementById("input").value.trim();
     }
+
+    if (q.type === "number") {
+      return Number(document.getElementById("input").value);
+    }
+
+    if (q.type === "slider") {
+      return Number(sliderValue);
+    }
+
     if (q.type === "cards") {
       return selectedCard;
     }
+
     if (q.type === "lifts") {
       const data = {};
       q.fields.forEach(f => {
-        data[f.id] = app.querySelector(`[data-id="${f.id}"]`).value;
+        data[f.id] = Number(document.querySelector(`[data-id="${f.id}"]`).value || 0);
       });
       return data;
     }
@@ -212,17 +217,13 @@ export function showQuiz(onFinish) {
 
   function showError(msg) {
     const el = document.getElementById("quizError");
-    if (el) {
-      el.textContent = msg;
-      el.style.opacity = "1";
-    }
+    el.textContent = msg;
+    el.style.opacity = "1";
   }
 
   function clearError() {
     const el = document.getElementById("quizError");
-    if (el) {
-      el.textContent = "";
-    }
+    if (el) el.textContent = "";
   }
 
   render();
