@@ -1,8 +1,10 @@
 import { QUESTIONS } from "../data/questions.js";
+import { loadCSS } from "../utils.js";
 
 let selectedCard = null;
 
 export function showQuiz(onFinish) {
+  loadCSS("assets/css/quiz.css");  
   const app = document.getElementById("app");
 
   let currentIndex = 0;
