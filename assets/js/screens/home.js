@@ -1,4 +1,7 @@
+import { loadCSS } from "../utils.js";
+
 export function showHome() {
+    loadCSS("assets/css/home.css");
   const app = document.getElementById("app");
 
   app.innerHTML = `

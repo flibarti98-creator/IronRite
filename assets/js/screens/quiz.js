@@ -10,10 +10,10 @@ export function showQuiz(onFinish) {
   loadCSS("assets/css/quiz.css");
 
   const app = document.getElementById("app");
-
   let currentIndex = 0;
-  const answers = {};
+  const answers = {}; // Tutaj lądują wszystkie wyniki
 
+  // Główny nasłuchiwacz kliknięć w karty
   app.addEventListener("click", (e) => {
     const card = e.target.closest(".card");
     if (!card) return;
@@ -31,10 +31,19 @@ export function showQuiz(onFinish) {
 
     clearError();
 
-    if (q?.autoNext) {
-      setTimeout(() => {
-        goNext();
-      }, 180);
+    // POPRAWKA: autoNext musi zapisać wartość przed przejściem dalej!
+    if (q?.autoNext && !q.multi) { 
+      const val = readValue(q);
+      const valid = q.validate ? q.validate(val) : true;
+      
+      if (valid) {
+        answers[q.id] = val;
+        setTimeout(() => {
+          goNext();
+        }, 180);
+      } else {
+        showError("Podaj poprawną wartość");
+      }
     }
   });
 
@@ -87,11 +96,15 @@ export function showQuiz(onFinish) {
   }
 
   function doRender(direction) {
-    selectedCard = null;
-    selectedMulti = new Set();
-    sliderValue = null;
-
     const q = QUESTIONS[currentIndex];
+    
+    // POPRAWKA: Zamiast resetować stan do null, przywracamy zapisane wcześniej odpowiedzi (UX "Wstecz")
+    const existingAnswer = answers[q.id];
+    
+    selectedCard = (q.type === "cards" && !q.multi) ? (existingAnswer || null) : null;
+    selectedMulti = (q.type === "cards" && q.multi) ? new Set(existingAnswer || []) : new Set();
+    sliderValue = q.type === "slider" ? (existingAnswer ?? q.slider.default) : null;
+
     const progress = ((currentIndex + 1) / QUESTIONS.length) * 100;
     const enterClass = direction === "back" ? "quiz-enter-back" : "quiz-enter-next";
 
@@ -122,19 +135,21 @@ export function showQuiz(onFinish) {
       </div>
     `;
 
-    renderQuestion(q);
+    renderQuestion(q, existingAnswer); // Przekazujemy zapisaną odpowiedź do renderera
     bindEvents(q);
   }
 
-  function renderQuestion(q) {
+  function renderQuestion(q, existingAnswer) {
     const el = document.getElementById("content");
 
     /* ================= TEXT / NUMBER ================= */
     if (q.type === "text" || q.type === "number") {
+      const val = existingAnswer !== undefined ? existingAnswer : "";
       el.innerHTML = `
         <input id="input"
           type="${q.type === "number" ? "number" : "text"}"
           placeholder="${q.input?.placeholder || ""}"
+          value="${val}"
           ${q.input?.maxLength ? `maxlength="${q.input.maxLength}"` : ""}
         />
       `;
@@ -145,13 +160,13 @@ export function showQuiz(onFinish) {
     /* ================= SLIDER ================= */
     if (q.type === "slider") {
       const s = q.slider;
-      sliderValue = s.default;
+      const currentVal = existingAnswer ?? s.default;
 
       el.innerHTML = `
         <div class="slider-wrap">
           <div class="slider-top">
             <span>${q.title}</span>
-            <span id="sliderVal">${s.default} ${s.unit}</span>
+            <span id="sliderVal">${currentVal} ${s.unit}</span>
           </div>
 
           <input id="input"
@@ -159,7 +174,7 @@ export function showQuiz(onFinish) {
             min="${s.min}"
             max="${s.max}"
             step="${s.step}"
-            value="${s.default}"
+            value="${currentVal}"
           />
 
           <div class="slider-range">
@@ -182,11 +197,20 @@ export function showQuiz(onFinish) {
     if (q.type === "cards") {
       el.innerHTML = `
         <div class="cards-wrap">
-          ${q.options.map(o => `
-            <button type="button" class="card" data-value="${o.value}">
-              ${o.label}
-            </button>
-          `).join("")}
+          ${q.options.map(o => {
+            // Sprawdzamy czy karta była wcześniej zaznaczona
+            let isActive = false;
+            if (q.multi) {
+              isActive = selectedMulti.has(o.value);
+            } else {
+              isActive = selectedCard === o.value;
+            }
+            return `
+              <button type="button" class="card ${isActive ? 'active' : ''}" data-value="${o.value}">
+                ${o.label}
+              </button>
+            `;
+          }).join("")}
         </div>
       `;
     }
@@ -195,12 +219,15 @@ export function showQuiz(onFinish) {
     if (q.type === "lifts") {
       el.innerHTML = `
         <div class="lifts-wrap">
-          ${q.fields.map(f => `
-            <div class="lift">
-              <label>${f.label}</label>
-              <input type="number" data-id="${f.id}" placeholder="${f.unit}" />
-            </div>
-          `).join("")}
+          ${q.fields.map(f => {
+            const val = existingAnswer && existingAnswer[f.id] ? existingAnswer[f.id] : "";
+            return `
+              <div class="lift">
+                <label>${f.label}</label>
+                <input type="number" data-id="${f.id}" placeholder="${f.unit}" value="${val}" />
+              </div>
+            `;
+          }).join("")}
         </div>
       `;
     }
@@ -230,7 +257,7 @@ export function showQuiz(onFinish) {
         return;
       }
 
-      answers[q.id] = value;
+      answers[q.id] = value; // Zapis do głównego obiektu
       goNext();
     };
 
@@ -247,7 +274,7 @@ export function showQuiz(onFinish) {
     canClick = false;
 
     if (currentIndex === QUESTIONS.length - 1) {
-      onFinish(answers);
+      onFinish(answers); // Po ostatnim pytaniu przekazujemy cały obiekt "answers" wyżej
       return;
     }
 
@@ -262,7 +289,8 @@ export function showQuiz(onFinish) {
     }
 
     if (q.type === "number") {
-      return Number(document.getElementById("input").value);
+      const val = document.getElementById("input").value;
+      return val === "" ? null : Number(val);
     }
 
     if (q.type === "slider") {
@@ -276,7 +304,8 @@ export function showQuiz(onFinish) {
     if (q.type === "lifts") {
       const data = {};
       q.fields.forEach(f => {
-        data[f.id] = Number(document.querySelector(`[data-id="${f.id}"]`)?.value || 0);
+        const val = document.querySelector(`[data-id="${f.id}"]`)?.value;
+        data[f.id] = val ? Number(val) : 0;
       });
       return data;
     }
@@ -284,8 +313,10 @@ export function showQuiz(onFinish) {
 
   function showError(msg) {
     const el = document.getElementById("quizError");
-    el.textContent = msg;
-    el.style.opacity = "1";
+    if (el) {
+      el.textContent = msg;
+      el.style.opacity = "1";
+    }
   }
 
   function clearError() {
