@@ -2,121 +2,177 @@ export const QUESTIONS = [
   {
     id: "name",
     type: "text",
-    title: "Jak masz na imię?",
-    desc: "Użyjemy tego w aplikacji.",
-    input: {
-      placeholder: "Twoje imię...",
-      maxLength: 40,
-    },
-    validate: (v) => {
-      if (!v || v.trim().length < 2) return "Wpisz co najmniej 2 znaki";
-      return true;
-    },
+    required: true,
+    title: "Jak mam się do Ciebie zwracać?",
+    input: { placeholder: "Twoje imię...", maxLength: 30 },
+    validate: (v) => typeof v === "string" && v.trim().length >= 2,
   },
 
   {
     id: "age",
     type: "slider",
-    title: "Ile masz lat?",
-    desc: "Dopasujemy trening do Twojego wieku.",
-    slider: {
-      min: 15,
-      max: 70,
-      step: 1,
-      default: 25,
-      unit: "lat",
-    },
+    required: true,
+    title: "Wiek",
+    slider: { min: 12, max: 90, step: 1, default: 25, unit: "lat" },
+    validate: (v) => Number(v) >= 12,
+  },
+
+  {
+    id: "gender",
+    type: "cards",
+    required: true,
+    autoNext: true,
+    title: "Płeć",
+    options: [
+      { value: "male", label: "Mężczyzna" },
+      { value: "female", label: "Kobieta" },
+    ],
+    validate: (v) => ["male", "female"].includes(v),
+  },
+
+  {
+    id: "height",
+    type: "number",
+    required: true,
+    title: "Wzrost",
+    input: { placeholder: "np. 180", unit: "cm" },
     validate: (v) => {
       const n = Number(v);
-      if (n < 15 || n > 70) return "Wiek poza zakresem";
-      return true;
+      return n >= 100 && n <= 230;
     },
+  },
+
+  {
+    id: "weight",
+    type: "number",
+    required: true,
+    title: "Waga",
+    input: { placeholder: "np. 75", unit: "kg" },
+    validate: (v) => {
+      const n = Number(v);
+      return n >= 25 && n <= 300;
+    },
+  },
+
+  {
+    id: "training_days",
+    type: "cards",
+    required: true,
+    autoNext: true,
+    title: "Trening siłowy w tygodniu",
+    options: [
+      { value: "0-1", label: "0–1 dni" },
+      { value: "2-3", label: "2–3 dni" },
+      { value: "4-5", label: "4–5 dni" },
+      { value: "6-7", label: "6–7 dni" },
+    ],
+    validate: (v) => !!v,
+  },
+
+  {
+    id: "activity",
+    type: "cards",
+    required: true,
+    autoNext: true,
+    title: "Aktywność poza treningiem",
+    options: [
+      { value: "low", label: "Siedzący tryb (mało ruchu)" },
+      { value: "medium", label: "Umiarkowana (spacery, szkoła/praca)" },
+      { value: "high", label: "Bardzo aktywny (praca fizyczna)" },
+    ],
+    validate: (v) => !!v,
   },
 
   {
     id: "goal",
     type: "cards",
-    title: "Twój cel",
-    desc: "Wybierz jeden — możesz zmienić później.",
+    required: true,
+    autoNext: true,
+    title: "Cel",
     options: [
-      {
-        value: "strength",
-        label: "Siła",
-        sub: "Maksymalne ciężary i pobijanie rekordów",
-      },
-      {
-        value: "mass",
-        label: "Masa",
-        sub: "Budowanie mięśni i objętości",
-      },
-      {
-        value: "cut",
-        label: "Redukcja",
-        sub: "Spalanie tłuszczu przy zachowaniu mięśni",
-      },
+      { value: "mass", label: "Masa mięśniowa" },
+      { value: "strength", label: "Siła" },
+      { value: "cut", label: "Redukcja tkanki tłuszczowej" },
+      { value: "recomp", label: "Rekompozycja ciała" },
     ],
-    validate: (v) => {
-      if (!v) return "Wybierz jeden cel";
-      return true;
-    },
+    validate: (v) => !!v,
   },
 
   {
     id: "experience",
     type: "cards",
-    title: "Doświadczenie",
-    desc: "Twój poziom zaawansowania.",
+    required: true,
+    autoNext: true,
+    title: "Doświadczenie treningowe",
     options: [
-      {
-        value: "beginner",
-        label: "Początkujący",
-        sub: "Trenuję krócej niż rok",
-      },
-      {
-        value: "intermediate",
-        label: "Średni",
-        sub: "1–3 lata regularnego treningu",
-      },
-      {
-        value: "advanced",
-        label: "Zaawansowany",
-        sub: "Ponad 3 lata, znam swoje ciało",
-      },
+      { value: "beginner", label: "Początkujący (0–1 rok)" },
+      { value: "intermediate", label: "Średniozaawansowany (1–3 lata)" },
+      { value: "advanced", label: "Zaawansowany (3+ lata)" },
     ],
-    validate: (v) => {
-      if (!v) return "Wybierz poziom";
-      return true;
-    },
+    validate: (v) => !!v,
   },
 
   {
-    id: "frequency",
-    type: "slider",
-    title: "Ile dni trenujesz?",
-    desc: "Tygodniowo — bądź realistyczny.",
-    slider: {
-      min: 1,
-      max: 7,
-      step: 1,
-      default: 3,
-      unit: "dni / tydzień",
-    },
-    validate: (v) => {
-      const n = Number(v);
-      if (n < 1 || n > 7) return "Wybierz od 1 do 7 dni";
-      return true;
-    },
+    id: "sleep",
+    type: "cards",
+    required: true,
+    autoNext: true,
+    title: "Sen",
+    options: [
+      { value: "lt6", label: "Mniej niż 6h" },
+      { value: "6-7", label: "6–7h" },
+      { value: "7-8", label: "7–8h" },
+      { value: "8-9", label: "8–9h" },
+      { value: "gt9", label: "Powyżej 9h" },
+    ],
+    validate: (v) => !!v,
   },
 
   {
-    id: "lifts",
+    id: "stress",
+    type: "cards",
+    required: true,
+    autoNext: true,
+    title: "Stres",
+    options: [
+      { value: "low", label: "Niski" },
+      { value: "medium", label: "Średni" },
+      { value: "high", label: "Wysoki" },
+      { value: "very_high", label: "Bardzo wysoki" },
+    ],
+    validate: (v) => !!v,
+  },
+
+  {
+    id: "supplements",
+    type: "cards",
+    required: false,
+    multi: true,
+    exclusiveValue: "none",
+    title: "Suplementacja",
+    options: [
+      { value: "none", label: "Brak suplementów" },
+      { value: "protein", label: "Białko (WPC/WPI)" },
+      { value: "creatine", label: "Kreatyna" },
+      { value: "d3", label: "Witamina D3" },
+      { value: "omega3", label: "Omega-3" },
+      { value: "magnesium", label: "Magnez" },
+      { value: "electrolytes", label: "Elektrolity" },
+      { value: "preworkout", label: "Pre-workout" },
+      { value: "ashwagandha", label: "Ashwagandha" },
+    ],
+    validate: (v) => Array.isArray(v) && (v.length === 0 || !(v.includes("none") && v.length > 1)),
+  },
+
+  {
+    id: "strength",
     type: "lifts",
-    title: "Rekordy osobiste",
-    desc: "Opcjonalne — wpisz 0 jeśli nie wiesz.",
+    required: false,
+    title: "Siła (opcjonalnie)",
     fields: [
-      { id: "bench", label: "Wyciskanie leżąc", placeholder: "0", unit: "kg" },
-      { id: "squat", label: "Przysiad ze sztangą", placeholder: "0", unit: "kg" },
-      { id: "deadlift", label: "Martwy ciąg", placeholder: "0", unit: "kg" },
+      { id: "bench", label: "Wyciskanie leżąc", unit: "kg" },
+      { id: "squat", label: "Przysiad", unit: "kg" },
+      { id: "deadlift", label: "Martwy ciąg", unit: "kg" },
     ],
     validate: () => true,
   },
