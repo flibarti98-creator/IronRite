@@ -1,3 +1,5 @@
+import { loadCSS } from "../utils.js";
+
 export function showHome() {
   const userData = JSON.parse(localStorage.getItem("userData") || "{}");
   const name = userData.name || "Atleta";
@@ -7,6 +9,8 @@ export function showHome() {
 
   const goalLabel = { strength: "Siła", mass: "Masa", cut: "Redukcja" }[goal] || "Siła";
   const expLabel = { beginner: "Początkujący", intermediate: "Średni", advanced: "Zaawansowany" }[experience] || "";
+    loadCSS("assets/css/home.css");
+  const app = document.getElementById("app");
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Dzień dobry" : hour < 18 ? "Cześć" : "Dobry wieczór";

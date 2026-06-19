@@ -1,3 +1,4 @@
+import { loadCSS } from "../utils.js";
 const LOGO_SVG = `
 <svg class="logo-svg" viewBox="0 0 466 337" xmlns="http://www.w3.org/2000/svg" aria-label="IronRite">
   <g class="logo-icon" transform="translate(0,337) scale(0.1,-0.1)">
@@ -47,6 +48,7 @@ m283 199 c49 -13 77 -44 77 -87 0 -80 -40 -102 -185 -102 l-105 0 0 100 0 100
 `;
 
 export function showLoading(next) {
+  loadCSS("assets/css/loading.css");  
   const app = document.getElementById("app");
 
   app.innerHTML = `
@@ -93,3 +95,4 @@ export function showLoading(next) {
     }
   }, DURATION + 200);
 }
+ 
