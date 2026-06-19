@@ -1,5 +1,8 @@
 /* ============================================
-   QUIZ SCREEN - PREMIUM FITNESS UI
+   QUIZ VIEW - styl SPECYFICZNY dla tego widoku.
+   Nie nadpisuje body / :root - korzysta z global vars
+   (--bg-1, --bg-2, --bg-3, --text-muted) zdefiniowanych
+   w global.css.
    ============================================ */
 
 .quiz-screen {
@@ -10,10 +13,11 @@
   align-items: center;
   padding: 20px 14px;
 
+  /* delikatny overlay nad globalnym tłem, nie inny kolor */
   background:
-    radial-gradient(circle at top, rgba(91,127,191,0.25), transparent 60%),
-    radial-gradient(circle at bottom, rgba(168,191,234,0.12), transparent 60%),
-    #0b1220;
+    radial-gradient(circle at top, rgba(91,127,191,0.22), transparent 60%),
+    radial-gradient(circle at bottom, rgba(168,191,234,0.10), transparent 60%),
+    var(--bg-1);
 }
 
 /* MAIN CARD */
@@ -26,9 +30,9 @@
   flex-direction: column;
   gap: 18px;
 
-  color: #ECEFF1;
+  color: inherit; /* dziedziczy z body */
 
-  background: rgba(18, 26, 44, 0.72);
+  background: var(--bg-2);
   border: 1px solid rgba(255,255,255,0.06);
   border-radius: 20px;
 
@@ -37,6 +41,37 @@
   box-shadow:
     0 30px 80px rgba(0,0,0,0.45),
     inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+/* ===== PRZEJŚCIA MIĘDZY PYTANIAMI ===== */
+.quiz-enter-next {
+  animation: quizEnterNext 0.32s ease forwards;
+}
+.quiz-enter-back {
+  animation: quizEnterBack 0.32s ease forwards;
+}
+.quiz-exit-next {
+  animation: quizExitNext 0.16s ease forwards;
+}
+.quiz-exit-back {
+  animation: quizExitBack 0.16s ease forwards;
+}
+
+@keyframes quizEnterNext {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes quizEnterBack {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes quizExitNext {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-16px); }
+}
+@keyframes quizExitBack {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(16px); }
 }
 
 /* PROGRESS */
@@ -62,7 +97,7 @@
 
 .quiz-step-label {
   font-size: 11px;
-  color: rgba(154,166,178,0.75);
+  color: var(--text-muted);
   min-width: 50px;
   text-align: right;
 }
@@ -76,23 +111,23 @@
 }
 
 /* INPUTS */
-input[type="text"],
-input[type="number"] {
+.quiz input[type="text"],
+.quiz input[type="number"] {
   width: 100%;
   padding: 15px 14px;
 
   border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.08);
 
-  background: rgba(8, 14, 28, 0.65);
-  color: #ECEFF1;
+  background: var(--bg-3);
+  color: inherit;
 
   font-size: 15px;
 
   transition: 0.2s ease;
 }
 
-input:focus {
+.quiz input:focus {
   outline: none;
   border-color: #5B7FBF;
   box-shadow: 0 0 0 3px rgba(91,127,191,0.18);
@@ -109,10 +144,9 @@ input:focus {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
-  color: #ECEFF1;
 }
 
-input[type="range"] {
+.quiz input[type="range"] {
   width: 100%;
   accent-color: #5B7FBF;
 }
@@ -121,7 +155,7 @@ input[type="range"] {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: rgba(154,166,178,0.55);
+  color: var(--text-muted);
 }
 
 /* CARDS */
@@ -129,6 +163,17 @@ input[type="range"] {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.cards-wrap::-webkit-scrollbar {
+  width: 4px;
+}
+.cards-wrap::-webkit-scrollbar-thumb {
+  background: rgba(91,127,191,0.4);
+  border-radius: 999px;
 }
 
 .card {
@@ -141,10 +186,12 @@ input[type="range"] {
   border-radius: 14px;
 
   border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(10, 16, 30, 0.55);
+  background: var(--bg-3);
 
-  color: #ECEFF1;
+  color: inherit;
   font-size: 14px;
+  font-family: inherit;
+  text-align: left;
 
   cursor: pointer;
   transition: 0.2s ease;
@@ -161,13 +208,11 @@ input[type="range"] {
   background: rgba(91,127,191,0.18);
 }
 
-/* DOT (opcjonalny highlight) */
-.card-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #5B7FBF;
-  opacity: 0.9;
+.card.active::after {
+  content: "✓";
+  margin-left: 10px;
+  color: #A8BFEA;
+  font-weight: 700;
 }
 
 /* LIFTS */
@@ -179,7 +224,7 @@ input[type="range"] {
 
 .lift label {
   font-size: 13px;
-  color: rgba(236,239,241,0.85);
+  color: var(--text-muted);
   margin-bottom: 6px;
   display: block;
 }
@@ -191,8 +236,8 @@ input[type="range"] {
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.08);
 
-  background: rgba(8, 14, 28, 0.65);
-  color: #ECEFF1;
+  background: var(--bg-3);
+  color: inherit;
 }
 
 /* ACTIONS */
@@ -210,8 +255,9 @@ input[type="range"] {
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.08);
 
-  background: rgba(10, 16, 30, 0.6);
-  color: #ECEFF1;
+  background: var(--bg-3);
+  color: inherit;
+  font-family: inherit;
 
   cursor: pointer;
   transition: 0.2s ease;
@@ -222,6 +268,12 @@ input[type="range"] {
 .btn:hover {
   transform: translateY(-2px);
   border-color: rgba(91,127,191,0.5);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .btn-primary {
@@ -249,5 +301,9 @@ input[type="range"] {
 
   .quiz h2 {
     font-size: 18px;
+  }
+
+  .cards-wrap {
+    max-height: 300px;
   }
 }

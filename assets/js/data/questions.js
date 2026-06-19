@@ -13,8 +13,8 @@ export const QUESTIONS = [
     type: "slider",
     required: true,
     title: "Wiek",
-    slider: { min: 14, max: 75, step: 1, default: 25, unit: "lat" },
-    validate: (v) => Number(v) >= 14,
+    slider: { min: 12, max: 90, step: 1, default: 25, unit: "lat" },
+    validate: (v) => Number(v) >= 12,
   },
 
   {
@@ -30,10 +30,6 @@ export const QUESTIONS = [
     validate: (v) => ["male", "female"].includes(v),
   },
 
-  /* =========================
-     BODY (bardziej realne widełki)
-     ========================= */
-
   {
     id: "height",
     type: "number",
@@ -42,7 +38,7 @@ export const QUESTIONS = [
     input: { placeholder: "np. 180", unit: "cm" },
     validate: (v) => {
       const n = Number(v);
-      return n >= 130 && n <= 220;
+      return n >= 100 && n <= 230;
     },
   },
 
@@ -54,13 +50,9 @@ export const QUESTIONS = [
     input: { placeholder: "np. 75", unit: "kg" },
     validate: (v) => {
       const n = Number(v);
-      return n >= 35 && n <= 220;
+      return n >= 25 && n <= 300;
     },
   },
-
-  /* =========================
-     ACTIVITY FLOW (ważne do kalorii)
-     ========================= */
 
   {
     id: "training_days",
@@ -91,10 +83,6 @@ export const QUESTIONS = [
     validate: (v) => !!v,
   },
 
-  /* =========================
-     GOAL (bardziej “fit app style”)
-     ========================= */
-
   {
     id: "goal",
     type: "cards",
@@ -123,10 +111,6 @@ export const QUESTIONS = [
     ],
     validate: (v) => !!v,
   },
-
-  /* =========================
-     RECOVERY (ważne dla planu)
-     ========================= */
 
   {
     id: "sleep",
@@ -159,31 +143,12 @@ export const QUESTIONS = [
     validate: (v) => !!v,
   },
 
-  /* =========================
-     OPTIONAL STRENGTH
-     ========================= */
-
-  {
-    id: "strength",
-    type: "lifts",
-    required: false,
-    title: "Siła (opcjonalnie)",
-    fields: [
-      { id: "bench", label: "Wyciskanie leżąc", unit: "kg" },
-      { id: "squat", label: "Przysiad", unit: "kg" },
-      { id: "deadlift", label: "Martwy ciąg", unit: "kg" },
-    ],
-  },
-
-  /* =========================
-     SUPPLEMENTS (bardziej realne)
-     ========================= */
-
   {
     id: "supplements",
     type: "cards",
     required: false,
     multi: true,
+    exclusiveValue: "none",
     title: "Suplementacja",
     options: [
       { value: "none", label: "Brak suplementów" },
@@ -195,6 +160,19 @@ export const QUESTIONS = [
       { value: "electrolytes", label: "Elektrolity" },
       { value: "preworkout", label: "Pre-workout" },
       { value: "ashwagandha", label: "Ashwagandha" },
+    ],
+    validate: (v) => Array.isArray(v) && (v.length === 0 || !(v.includes("none") && v.length > 1)),
+  },
+
+  {
+    id: "strength",
+    type: "lifts",
+    required: false,
+    title: "Siła (opcjonalnie)",
+    fields: [
+      { id: "bench", label: "Wyciskanie leżąc", unit: "kg" },
+      { id: "squat", label: "Przysiad", unit: "kg" },
+      { id: "deadlift", label: "Martwy ciąg", unit: "kg" },
     ],
     validate: () => true,
   },

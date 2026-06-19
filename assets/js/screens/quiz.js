@@ -1,7 +1,8 @@
 import { QUESTIONS } from "../data/questions.js";
 import { loadCSS } from "../utils.js";
 
-let selectedCard = null;
+let selectedCard = null;       // single-select
+let selectedMulti = new Set(); // multi-select
 let sliderValue = null;
 let canClick = true;
 
@@ -17,32 +18,86 @@ export function showQuiz(onFinish) {
     const card = e.target.closest(".card");
     if (!card) return;
 
-    selectedCard = card.dataset.value;
+    const q = QUESTIONS[currentIndex];
+    const value = card.dataset.value;
 
-    app.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
-    card.classList.add("active");
+    if (q.multi) {
+      handleMultiClick(q, card, value);
+    } else {
+      selectedCard = value;
+      app.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+    }
 
     clearError();
 
-    const q = QUESTIONS[currentIndex];
     if (q?.autoNext) {
       setTimeout(() => {
-        document.getElementById("next")?.click();
+        goNext();
       }, 180);
     }
   });
 
-  function render() {
+  function handleMultiClick(q, card, value) {
+    const exclusive = q.exclusiveValue; // np. "none"
+
+    if (exclusive && value === exclusive) {
+      if (selectedMulti.has(value)) {
+        selectedMulti.delete(value);
+        card.classList.remove("active");
+      } else {
+        selectedMulti.clear();
+        selectedMulti.add(value);
+        app.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+      }
+      return;
+    }
+
+    if (exclusive && selectedMulti.has(exclusive)) {
+      selectedMulti.delete(exclusive);
+      const exclusiveCard = app.querySelector(`.card[data-value="${exclusive}"]`);
+      exclusiveCard?.classList.remove("active");
+    }
+
+    if (selectedMulti.has(value)) {
+      selectedMulti.delete(value);
+      card.classList.remove("active");
+    } else {
+      selectedMulti.add(value);
+      card.classList.add("active");
+    }
+  }
+
+  /* ====== RENDER Z ANIMOWANYM PRZEJŚCIEM ====== */
+
+  function render(direction = "next") {
+    const oldQuiz = app.querySelector(".quiz");
+
+    if (!oldQuiz) {
+      doRender(direction);
+      return;
+    }
+
+    oldQuiz.classList.add(direction === "back" ? "quiz-exit-back" : "quiz-exit-next");
+
+    setTimeout(() => {
+      doRender(direction);
+    }, 150);
+  }
+
+  function doRender(direction) {
     selectedCard = null;
+    selectedMulti = new Set();
     sliderValue = null;
 
     const q = QUESTIONS[currentIndex];
-
     const progress = ((currentIndex + 1) / QUESTIONS.length) * 100;
+    const enterClass = direction === "back" ? "quiz-enter-back" : "quiz-enter-next";
 
     app.innerHTML = `
       <div class="quiz-screen">
-        <div class="quiz">
+        <div class="quiz ${enterClass}">
 
           <div class="quiz-progress-wrap">
             <div class="quiz-progress-track">
@@ -59,8 +114,8 @@ export function showQuiz(onFinish) {
           <p class="quiz-error" id="quizError"></p>
 
           <div class="actions">
-            ${currentIndex > 0 ? `<button class="btn" id="back">Wstecz</button>` : ""}
-            <button class="btn btn-primary" id="next">Dalej</button>
+            ${currentIndex > 0 ? `<button type="button" class="btn" id="back">Wstecz</button>` : ""}
+            <button type="button" class="btn btn-primary" id="next">Dalej</button>
           </div>
 
         </div>
@@ -80,6 +135,7 @@ export function showQuiz(onFinish) {
         <input id="input"
           type="${q.type === "number" ? "number" : "text"}"
           placeholder="${q.input?.placeholder || ""}"
+          ${q.input?.maxLength ? `maxlength="${q.input.maxLength}"` : ""}
         />
       `;
 
@@ -89,7 +145,6 @@ export function showQuiz(onFinish) {
     /* ================= SLIDER ================= */
     if (q.type === "slider") {
       const s = q.slider;
-
       sliderValue = s.default;
 
       el.innerHTML = `
@@ -106,6 +161,11 @@ export function showQuiz(onFinish) {
             step="${s.step}"
             value="${s.default}"
           />
+
+          <div class="slider-range">
+            <span>${s.min}</span>
+            <span>${s.max}</span>
+          </div>
         </div>
       `;
 
@@ -123,7 +183,7 @@ export function showQuiz(onFinish) {
       el.innerHTML = `
         <div class="cards-wrap">
           ${q.options.map(o => `
-            <button class="card" data-value="${o.value}">
+            <button type="button" class="card" data-value="${o.value}">
               ${o.label}
             </button>
           `).join("")}
@@ -151,13 +211,15 @@ export function showQuiz(onFinish) {
 
     nextBtn.onclick = () => {
       if (!canClick) return;
-      canClick = false;
 
       const value = readValue(q);
 
-      if (q.required && (value === null || value === "" || value === undefined)) {
+      const isEmpty =
+        value === null || value === "" || value === undefined ||
+        (Array.isArray(value) && value.length === 0);
+
+      if (q.required && isEmpty) {
         showError("To pole jest wymagane");
-        canClick = true;
         return;
       }
 
@@ -165,28 +227,33 @@ export function showQuiz(onFinish) {
 
       if (!valid) {
         showError("Podaj poprawną wartość");
-        canClick = true;
         return;
       }
 
       answers[q.id] = value;
-
-      setTimeout(() => {
-        canClick = true;
-
-        if (currentIndex === QUESTIONS.length - 1) {
-          onFinish(answers);
-        } else {
-          currentIndex++;
-          render();
-        }
-      }, 250);
+      goNext();
     };
 
     document.getElementById("back")?.addEventListener("click", () => {
+      if (!canClick) return;
+      canClick = false;
       currentIndex--;
-      render();
+      render("back");
+      setTimeout(() => { canClick = true; }, 350);
     });
+  }
+
+  function goNext() {
+    canClick = false;
+
+    if (currentIndex === QUESTIONS.length - 1) {
+      onFinish(answers);
+      return;
+    }
+
+    currentIndex++;
+    render("next");
+    setTimeout(() => { canClick = true; }, 350);
   }
 
   function readValue(q) {
@@ -199,17 +266,17 @@ export function showQuiz(onFinish) {
     }
 
     if (q.type === "slider") {
-      return Number(sliderValue);
+      return Number(sliderValue ?? q.slider.default);
     }
 
     if (q.type === "cards") {
-      return selectedCard;
+      return q.multi ? Array.from(selectedMulti) : selectedCard;
     }
 
     if (q.type === "lifts") {
       const data = {};
       q.fields.forEach(f => {
-        data[f.id] = Number(document.querySelector(`[data-id="${f.id}"]`).value || 0);
+        data[f.id] = Number(document.querySelector(`[data-id="${f.id}"]`)?.value || 0);
       });
       return data;
     }
@@ -226,5 +293,5 @@ export function showQuiz(onFinish) {
     if (el) el.textContent = "";
   }
 
-  render();
+  doRender("next");
 }
